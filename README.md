@@ -41,7 +41,7 @@ ENKRIPSI VERSI 2 :
 - Pada enkripsi v2, file-file pada direktori asli akan menjadi bagian-bagian kecil sebesar 1024 bytes dan menjadi normal ketika diakses melalui filesystem rancangan jasir. Sebagai contoh, file File_Contoh.txt berukuran 5 kB pada direktori asli akan menjadi 5 file kecil yakni: File_Contoh.txt.000, File_Contoh.txt.001, File_Contoh.txt.002, File_Contoh.txt.003, dan File_Contoh.txt.004.
 - Metode enkripsi pada suatu direktori juga berlaku kedalam direktori lain yang ada didalam direktori tersebut (rekursif).
 
-### Soal No. 2
+### Soal No. 3
 
 Tanpa mengurangi keumuman, misalkan suatu directory bernama dir akan tersinkronisasi dengan directory yang memiliki nama yang sama dengan awalan `sync_` yaitu `sync_dir`. Persyaratan untuk sinkronisasi yaitu :
 - Kedua directory memiliki parent directory yang sama.
@@ -53,7 +53,7 @@ Tanpa mengurangi keumuman, misalkan suatu directory bernama dir akan tersinkroni
 
 Jika persyaratan di atas terlanggar, maka kedua directory tersebut tidak akan tersinkronisasi lagi.
 
-### Soal No. 2
+### Soal No. 4
 
 Log System :
 - Sebuah berkas nantinya akan terbentuk bernama "fs.log" di direktori *home* pengguna (/home/[user]/fs.log) yang berguna menyimpan daftar perintah system call yang telah dijalankan.
