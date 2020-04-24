@@ -38,7 +38,7 @@ void encrypt_c(char *str) {
 	
 	while(str[index] != '\0') {
 		if(str[index] != '/') {
-			int idx_domain = strchr(domain, str[index] - domain;
+			int idx_domain = strchr(domain, str[index] - domain);
 			str[index] = codomain[idx_domain];
 		}
 		index++;	
@@ -50,7 +50,7 @@ void decrypt_c(char *str) {
 	
 	while(str[index] != '\0') {
 		if(str[index] != '/') {
-			int idx_codomain = strchr(codomain, str[index] - codomain;
+			int idx_codomain = strchr(codomain, str[index] - codomain);
 			str[index] = domain[idx_codomain];
 		}
 		index++;	
@@ -225,11 +225,3 @@ int main(int argc, char *argv[]) {
 	decrypt_v1(test);
 	puts(test);
 }
-
-
-
-
-
-
-
-
