@@ -9,8 +9,8 @@ Jasir menemukan 2 buah metode enkripsi file. Pada mode enkripsi pertama, nama fi
 
 Untuk segi efisiensi, dikarenakan pada perusahaan tersebut sering dilaksanakan sinkronisasi antara 2 direktori, maka jasir telah merumuskan sebuah metode agar filesystem-nya mampu mengsingkronkan kedua direktori tersebut secara otomatis. Agar integritas filesystem tersebut lebih terjamin, maka setiap command yang dilakukan akan dicatat kedalam sebuah file log.
 
-- fylesystem berfungsi normal layaknya linux pada umumnya.
-- mount source (root) filesystem adalah direktori /home/[user]/Documents)
+- filesystem berfungsi normal layaknya linux pada umumnya.
+- mount source (root) filesystem adalah direktori (/home/[user]/Documents)
 
 ### Soal No. 1
 
@@ -87,4 +87,151 @@ INFO::200419-18:29:33::RENAME::/iz1/yena.jpg::/iz1/yena.jpeg
 
 **PENJELASAN :**
 
-hehe blm.
+Yang pertama dilakukan adalah mendeclare makro untuk deklarasi key yang akan dipakai dalam proses enkripsi `#define key 10`. Juga dilakukan deklarasi untuk path dari direktori Documents `static const char *dirpath = "/home/devi/Documents";`.
+
+Kemudian key untuk proses eknkripsi dengan caesar cipher distore di dalam array `cipher`.
+```c
+char cipher[] = "9(ku@AW1[Lmvgax6q`5Y2Ry?+sF!^HKQiBXCUSe&0M.b%rI'7d)o4~VfZ*{#:}ETt$3J-zpc]lnh8,GwP_ND|jO";
+```
+
+Proses enkripsi untuk VERSI 1 dilakukan dengan cara yaitu pertama, full path dari direktori yang akan di enkripsi akan di cek per `char` dari belakang, apabila `char` yang sedang dicek merupakan '/' akan di break. Untuk menghandle apabila file memiliki ekstensi, apabila terdapat '.' maka `str_length` akan diubah menjadi `i-1`, sehingga yang ter enkrip hanya nama file dan tanpa ekstensi.
+```c
+void encrypt_v1(char *str) {
+	int str_length = strlen(str);
+	int begin = 0, idx;
+	char *ptr;
+
+	for(int i = strlen(str); i >= 0; i--) {
+		if(str[i] == '/') {
+			break;
+		}
+		else if(str[i] == '.') {
+			str_length = i-1;
+		}
+	}
+
+	for(int i = 1; i < str_length; i++) {
+		if(str[i] == '/') {
+			begin = i;
+		}
+	}
+```
+
+Untuk mengambil file atau direktori paling belakang pada path, dilakukan loop dimana setiap bertemu '/', variable `begin` akan di set menjadi indeks dimana '/' tersebut berada.
+```c
+	for(int i = 1; i < str_length; i++) {
+		if(str[i] == '/') {
+			begin = i;
+		}
+	}
+```
+
+Kemudian dilakukan pemetaan tiap-tiap karakter sebagai hasil dari enkripsi dengan loop.
+```c
+	for(int i = begin; i < str_length; i++) {
+		if(str[i] == '/') {
+			continue;
+		}
+		ptr = strchr(cipher, str[i]);
+		if(ptr) {
+			idx = ptr - cipher;
+			str[i] = cipher[(idx + key) % 87];
+		}
+	}
+}
+```
+
+Proses dekripsi untuk VERSI 1 dilakukan dengan cara yaitu pertama, full path akan dicek per char dari depan, apabila ditemukan '/' atau end of array `\0`, maka variable `begin` di set menjadi `i + 1` lalu di break.
+```c
+void decrypt_v1(char *str) {
+	int str_length = strlen(str);
+	int begin = 0, idx;
+	char *ptr;
+
+	for(int i = 1; i < str_length; i++) {
+		if(str[i] == '/' || str[i+1] == '\0') {
+			begin = i+1;
+			break;
+		}
+	}
+```
+
+Kemudian dilakukan loop untuk mengidentifikasi apakah file memiliki ekstensi atau tidak.
+```c
+	for(int i = strlen(str); i >= 0; i--) {
+		if(str[i] == '/') {
+			break;
+		}
+		else if(str[i] == '.' && i == (strlen(str)-1)) {
+			str_length = strlen(str);
+			break;
+		}
+		else if(str[i] == '.' && i != (strlen(str)-1)) {
+			str_length = i-1;
+			break;
+		}
+	}
+```
+
+Kemudian dilakukan pemetaan tiap-tiap karakter sebagai hasil dari enkripsi dengan loop.
+```c
+	for(int i = begin; i < str_length; i++) {
+		if(str[i] == '/') {
+			continue;
+		}
+		ptr = strchr(cipher, str[i]);
+		if(ptr) {
+			idx = ptr - cipher - key;
+			if(idx < 0) {
+				idx += 87;
+			}
+			str[i] = cipher[idx];
+		}
+	}
+}
+```
+
+Untuk menghandle pembuatan file histori `fs.log`, dilakukan dalam dua fungsi yaitu `void log_warning(char* desc, char* path)` dan  `void log_info(char* desc, char* path)`, dibedakan berdasarkan jenis level.
+
+Pertama-tama path file yang telah di declare dalam variable `LOG` akan di open dan dilakukan append 
+```c
+FILE *file_log = fopen(LOG, "a");
+```
+
+Kemudian dilakukan pengambilan local time dengan `struct tm`, lalu local time akan disimpan pada file `file_log` sesuai format.
+```c
+    time_t rawtime = time(NULL);
+	struct tm tm = *localtime(&rawtime);
+
+	int tahun = tm.tm_year+1900;
+	int bulan = tm.tm_mon+1;
+	int hari = tm.tm_mday;
+	int jam = tm.tm_hour;
+	int menit = tm.tm_min;
+	int detik = tm.tm_sec;
+
+	fprintf(file_log, "WARNING::%02d%02d%02d-%02d:%02d:%02d::%s::%s\n", 
+		tahun, bulan, hari, jam, menit, detik, desc, path);
+	fclose(file_log);
+```
+
+Berlaku juga pada fungsi `log_info`.
+```c
+void log_info(char* desc, char* path) {
+	FILE *file_log = fopen(LOG, "a");
+
+	time_t rawtime = time(NULL);
+	struct tm tm = *localtime(&rawtime);
+
+	int tahun = tm.tm_year+1900;
+	int bulan = tm.tm_mon+1;
+	int hari = tm.tm_mday;
+	int jam = tm.tm_hour;
+	int menit = tm.tm_min;
+	int detik = tm.tm_sec;
+
+	fprintf(file_log, "INFO::%02d%02d%02d-%02d:%02d:%02d::%s::%s\n", 
+		tahun, bulan, hari, jam, menit, detik, desc, path);
+	fclose(file_log);
+}
+```
