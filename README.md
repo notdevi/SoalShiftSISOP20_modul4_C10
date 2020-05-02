@@ -85,9 +85,11 @@ INFO::200419-18:29:33::RENAME::/iz1/yena.jpg::/iz1/yena.jpeg
 
 ***ssfs.c*** : [kodingan](https://github.com/notdevi/SoalShiftSISOP20_modul4_C10/blob/master/ssfs.c)
 
-**PENJELASAN :**
+**PENYELESAIAN :**
 
-Yang pertama dilakukan adalah mendeclare makro untuk deklarasi key yang akan dipakai dalam proses enkripsi `#define key 10`. Juga dilakukan deklarasi untuk path dari direktori Documents `static const char *dirpath = "/home/devi/Documents";`.
+**1**
+
+Hal pertama dilakukan adalah mendeclare makro untuk deklarasi key yang akan dipakai dalam proses enkripsi `#define key 10`. Juga dilakukan deklarasi untuk path dari direktori Documents `static const char *dirpath = "/home/devi/Documents";`.
 
 Kemudian key untuk proses eknkripsi dengan caesar cipher distore di dalam array `cipher`.
 ```c
@@ -191,6 +193,68 @@ Kemudian dilakukan pemetaan tiap-tiap karakter sebagai hasil dari enkripsi denga
 }
 ```
 
+Fungsi encrypt decrypt diatas nanti dipanggil di fungsi-fungsi fuse yang ada. Untuk encrypt hanya dipanggil pada `xmp_readdir`:
+```c
+
+.....
+
+	DIR *dp;
+   	struct dirent *de;
+
+    	(void) offset;
+    	(void) fi;
+
+    	dp = opendir(fpath);
+
+    	if(dp == NULL) return -errno;
+
+   	while ((de = readdir(dp)) != NULL) {
+        	struct stat st;
+	        memset(&st, 0, sizeof(st));
+        	st.st_ino = de->d_ino;
+        	st.st_mode = de->d_type << 12;
+		//titik sama dua titik direktori
+		if(strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0) {
+			continue;
+		}
+
+		char temp[1000];
+		
+		strcpy(temp, de->d_name);	// ngambil nama file doang
+		// printf("ini temp = %s\n", temp);
+
+		if(strncmp(path, "/encv1_", 7) == 0) {
+			encrypt_v1(temp);
+		}
+		res = (filler(buf, temp, &st, 0));
+
+        	if (res != 0) break;
+    	}
+```
+
+Sedangkan untuk fungsi decrypt dipanggil pada `xmp_getattr`, `xmp_readdir`, `xmp_read`, `xmp_truncate`, `xmp_write`, `xmp_unlink`, `xmp_rename`, `xmp_mkdir`, `xmp_rmdir`, `xmp_open` serta `xmp_mknod` yang jika ada nama folder bernama "encv1_" maka fungsi tersebut dipanggil :
+```c
+	if (strcmp(path, "/") == 0) {
+        	path = dirpath;
+        	sprintf(fpath, "%s", path);
+    	} else {
+		char temp[1000];
+		strcpy(temp, path);
+
+		if(strncmp(path, "/encv1_", 7) == 0) {
+			decrypt_v1(temp);
+		}
+
+		sprintf(fpath, "%s%s", dirpath, temp);
+	}
+```
+
+**2 dan 3**
+
+Belum berhasil diselesaikan.
+
+**4**
+
 Untuk menghandle pembuatan file histori `fs.log`, dilakukan dalam dua fungsi yaitu `void log_warning(char* desc, char* path)` dan  `void log_info(char* desc, char* path)`, dibedakan berdasarkan jenis level.
 
 Pertama-tama path file yang telah di declare dalam variable `LOG` akan di open dan dilakukan append 
@@ -234,4 +298,14 @@ void log_info(char* desc, char* path) {
 		tahun, bulan, hari, jam, menit, detik, desc, path);
 	fclose(file_log);
 }
+```
+
+Kedua fungsi diatas akan dipanggil pada masing-masing fungsi fuse sesuai dengan kebutuhan yang diperlukan, semisal :
+```c
+	log_info("MKDIR", fpath);
+```
+
+dan juga untuk log_warning:
+```c
+	log_warning("RMDIR", fpath);
 ```
