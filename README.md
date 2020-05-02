@@ -87,7 +87,7 @@ INFO::200419-18:29:33::RENAME::/iz1/yena.jpg::/iz1/yena.jpeg
 
 **PENYELESAIAN :**
 
-**1**
+**No. 1**
 
 Hal pertama dilakukan adalah mendeclare makro untuk deklarasi key yang akan dipakai dalam proses enkripsi `#define key 10`. Juga dilakukan deklarasi untuk path dari direktori Documents `static const char *dirpath = "/home/devi/Documents";`.
 
@@ -249,11 +249,11 @@ Sedangkan untuk fungsi decrypt dipanggil pada `xmp_getattr`, `xmp_readdir`, `xmp
 	}
 ```
 
-**2 dan 3**
+**No. 2 dan 3**
 
 Belum berhasil diselesaikan.
 
-**4**
+**No. 4**
 
 Untuk menghandle pembuatan file histori `fs.log`, dilakukan dalam dua fungsi yaitu `void log_warning(char* desc, char* path)` dan  `void log_info(char* desc, char* path)`, dibedakan berdasarkan jenis level.
 
